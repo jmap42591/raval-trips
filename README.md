@@ -12,6 +12,14 @@ portal. **Everything stays on your computer:** no account with us, no cloud, no 
 > Unofficial project. It is not affiliated with CUPRA or the VW Group, and it relies on a community connector
 > that can break if VW changes its portal. Energy and cost are **estimates** (battery % × capacity).
 
+## Screenshots
+
+*(Demo data, generated with `raval-trips demo`.)*
+
+![Current cycle: trips since the last charge, with distance, battery, energy and cost](docs/screenshots/current-cycle.jpg)
+
+![Monthly report: totals, consumption per trip and the cost of every trip](docs/screenshots/monthly-report.jpg)
+
 ## Quick start
 
 **0. Download** this project (green **Code** button → **Download ZIP**) and unzip it anywhere.
