@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+*.sqlite
+settings.json
+secret.json
+.DS_Store
+# developer-only helper tied to one person's Home Assistant setup
+tools/

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raval-trips"
+version = "0.1.0"
+description = "Viagens, consumos e custos do teu CUPRA a partir do portal EU Data Act - tudo local, sem servidores."
+requires-python = ">=3.10"
+dependencies = [
+    "carconnectivity-connector-vw-eu-data-act==0.3.2",
+    "keyring>=24",
+]
+
+[project.scripts]
+raval-trips = "raval_trips.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+raval_trips = ["static/*"]

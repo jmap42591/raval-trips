@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Raval Trips</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">⚡</span><div><h1>Raval Trips</h1><div class="sub" id="status">Loading…</div></div></div>
+  <div class="actions"><button id="syncBtn" class="ghost">Sync now</button></div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="cycle" class="active">Current cycle</button>
+  <button data-tab="month">Monthly report</button>
+  <button data-tab="settings">Settings</button>
+</nav>
+
+<main>
+  <section id="cycle" class="panel active"></section>
+  <section id="month" class="panel"></section>
+  <section id="settings" class="panel"></section>
+</main>
+
+<footer>Everything stays on this computer. Unofficial project, not affiliated with CUPRA or the VW Group. Energy and cost are estimates from the battery percentage.</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>
