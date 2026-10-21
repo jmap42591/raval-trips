@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "raval-trips"
-version = "0.1.0"
+version = "0.2.0"
 description = "Viagens, consumos e custos do teu CUPRA a partir do portal EU Data Act - tudo local, sem servidores."
 requires-python = ">=3.10"
 dependencies = [

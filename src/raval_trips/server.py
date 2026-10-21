@@ -37,6 +37,7 @@ class State:
 
 
 STATE = State()
+HTTPD = None   # set by serve(); lets /api/quit stop the server
 
 
 def _log(msg):
@@ -198,6 +199,11 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path == "/api/settings":
                 return self._json({"settings": save_settings(body)})
+            if path == "/api/quit":
+                self._json({"quitting": True})
+                if HTTPD is not None:
+                    threading.Thread(target=HTTPD.shutdown, daemon=True).start()
+                return
             if path == "/api/sync":
                 threading.Thread(target=run_sync, daemon=True).start()
                 return self._json({"started": True})
@@ -245,14 +251,33 @@ class Handler(BaseHTTPRequestHandler):
         return {"ok": True, "vehicles": vehicles, "vin": vin}
 
 
+def already_running(port) -> bool:
+    """True if another Raval Trips is already answering on this port."""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/status", timeout=2) as r:
+            return r.status == 200
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def serve(port=None, open_browser=True, background_sync=True):
+    global HTTPD
     s = load_settings()
     port = int(port or s["port"])
+    url = f"http://127.0.0.1:{port}/"
+    if already_running(port):      # double-clicked twice: just show the existing dashboard
+        print(f"Raval Trips is already running at {url}")
+        if open_browser:
+            import webbrowser
+            webbrowser.open(url)
+        return
     httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    HTTPD = httpd
     if background_sync:
         threading.Thread(target=sync_loop, daemon=True).start()
-    url = f"http://127.0.0.1:{port}/"
-    print(f"Raval Trips {__version__} is running at {url}  (press Ctrl+C to stop)")
+    print(f"Raval Trips {__version__} is running at {url}")
+    print("Keep this window open while you use the dashboard. Close it (or use Quit in Settings) to stop.")
     if open_browser:
         import webbrowser
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()

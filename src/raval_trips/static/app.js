@@ -141,6 +141,7 @@ function renderSettings() {
     Last sync: ${st.last_run ? date(st.last_run) : "never"}${st.last_error ? ` · <span style="color:var(--bad)">${esc(st.last_error)}</span>` : ""}</div>
     <label>Import data files (.zip) downloaded from the portal</label><input id="zipIn" type="file" accept=".zip" multiple>
     <div class="msg" id="zipMsg"></div>
+    <p><button class="ghost" id="quitBtn">Quit Raval Trips</button> <span class="note">Stops the app. Open it again any time; it catches up on missed data.</span></p>
     <details><summary class="note">Sync log</summary><pre class="note">${esc((st.log || []).join("\n") || "—")}</pre></details></div>`;
   $("#settings").innerHTML = h;
   bindConnect($("#settings"));
@@ -148,6 +149,11 @@ function renderSettings() {
     await api("/api/settings", { battery_kwh: $("#battery").value, price_kwh: $("#price").value, currency: $("#currency").value, gap_minutes: $("#gap").value });
     $("#saveMsg").textContent = "Saved ✓";
     load();
+  });
+  $("#quitBtn").addEventListener("click", async () => {
+    if (!confirm("Quit Raval Trips? Data is only downloaded while the app is running.")) return;
+    try { await api("/api/quit", {}); } catch (e) { /* server already gone */ }
+    document.body.innerHTML = '<main style="padding:60px 20px;text-align:center"><h2>Raval Trips has stopped</h2><p class="note">You can close this tab.</p></main>';
   });
   $("#zipIn").addEventListener("change", async (e) => {
     const msg = $("#zipMsg"); let ok = 0, bad = 0;

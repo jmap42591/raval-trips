@@ -22,17 +22,21 @@ portal. **Everything stays on your computer:** no account with us, no cloud, no 
 
 ## Quick start
 
-**0. Download** this project (green **Code** button → **Download ZIP**) and unzip it anywhere.
-
 **1. Ask the portal for your data** (once) — see [docs/PORTAL_GUIDE.md](docs/PORTAL_GUIDE.md).
 
-**2. Install and start**
-- **macOS:** double-click `install-and-run.command`
-- **Windows:** double-click `install-and-run.bat`
-- **Linux:** run `./install-and-run.sh`
+**2. Get the app** — no Python needed. Download it from the [latest release](https://github.com/jmap42591/raval-trips/releases/latest):
 
-You need **Python 3.10 or newer** (https://www.python.org/downloads/). The first run installs everything in about
-a minute; the dashboard then opens in your browser at `http://127.0.0.1:8765`.
+| System | File | First time you open it |
+|---|---|---|
+| **Windows 10/11** | `RavalTrips-windows.zip` | Unzip, open the folder, double-click `RavalTrips.exe`. If Windows SmartScreen warns about an unknown publisher, click **More info → Run anyway**. |
+| **macOS** (Apple silicon) | `RavalTrips-macOS-arm64.dmg` | Drag *Raval Trips* to Applications. The first time, **right-click it → Open → Open** (the app is not signed with an Apple developer certificate). |
+
+The dashboard opens in your browser at `http://127.0.0.1:8765`. Use **Settings → Quit Raval Trips** (or close the
+console window on Windows) to stop it.
+
+*Intel Mac, Linux, or you prefer Python?* Download this project (green **Code** button → **Download ZIP**), unzip it,
+and double-click `install-and-run.command` (macOS) / `install-and-run.bat` (Windows), or run `./install-and-run.sh`
+(Linux). This needs **Python 3.10 or newer** and installs everything on the first run.
 
 **3. Connect your car**: enter your VW ID in the dashboard. The password is stored in your system's secure
 vault (macOS Keychain, Windows Credential Locker) and only ever sent to VW. The app then syncs every 15 minutes while
@@ -77,6 +81,8 @@ python -m venv .venv && .venv/bin/pip install -e .
 PYTHONPATH=src python -m unittest discover -s tests
 PYTHONPATH=src python -m raval_trips demo
 ```
+The Windows and macOS apps are built with PyInstaller by `.github/workflows/build-apps.yml` whenever a version tag
+(`v*`) is pushed. Redraw the icon with `python packaging/make_icon.py` (needs Pillow).
 
 ## Credits
 Portal access uses [CarConnectivity-connector-vw-eu-data-act](https://github.com/mikrohard/CarConnectivity-connector-vw-eu-data-act)

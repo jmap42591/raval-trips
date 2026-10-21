@@ -1,0 +1,95 @@
+name: build-apps
+# Builds the Windows app and the macOS app. Runs when you push a version tag (v*) or by hand.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Create the release if it does not exist yet
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "Raval Trips ${GITHUB_REF_NAME#v}" \
+            --notes "Apps for Windows and macOS, built automatically. See the README for how to open them the first time."
+
+  windows:
+    runs-on: windows-latest
+    needs: [release]
+    if: always() && (needs.release.result == 'success' || needs.release.result == 'skipped')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install . pyinstaller
+          pyinstaller packaging/entry.py --name RavalTrips --noconfirm --clean --console `
+            --icon packaging/icon.ico --paths src --specpath build `
+            --add-data "$PWD/src/raval_trips/static;raval_trips/static" `
+            --collect-submodules carconnectivity_connectors --collect-submodules carconnectivity `
+            --collect-submodules keyring.backends --copy-metadata keyring --copy-metadata carconnectivity `
+            --copy-metadata carconnectivity-connector-vw-eu-data-act
+      - name: Self-test the built app
+        shell: pwsh
+        run: ./dist/RavalTrips/RavalTrips.exe --self-test
+      - name: Package
+        shell: pwsh
+        run: Compress-Archive -Path dist/RavalTrips -DestinationPath RavalTrips-windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RavalTrips-windows
+          path: RavalTrips-windows.zip
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$env:GITHUB_REF_NAME" RavalTrips-windows.zip --clobber --repo "$env:GITHUB_REPOSITORY"
+
+  macos:
+    runs-on: macos-latest
+    needs: [release]
+    if: always() && (needs.release.result == 'success' || needs.release.result == 'skipped')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install . pyinstaller
+          pyinstaller packaging/entry.py --name "Raval Trips" --windowed --noconfirm --clean \
+            --icon "$PWD/packaging/icon.icns" --paths "$PWD/src" --specpath build \
+            --add-data "$PWD/src/raval_trips/static:raval_trips/static" \
+            --collect-submodules carconnectivity_connectors --collect-submodules carconnectivity \
+            --collect-submodules keyring.backends --copy-metadata keyring --copy-metadata carconnectivity \
+            --copy-metadata carconnectivity-connector-vw-eu-data-act \
+            --osx-bundle-identifier io.github.jmap42591.ravaltrips
+      - name: Self-test the built app
+        run: |
+          "dist/Raval Trips.app/Contents/MacOS/Raval Trips" --self-test
+      - name: Package a disk image
+        run: |
+          mkdir dmg && cp -R "dist/Raval Trips.app" dmg/ && ln -s /Applications dmg/Applications
+          hdiutil create -volname "Raval Trips" -srcfolder dmg -ov -format UDZO RavalTrips-macOS-arm64.dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RavalTrips-macOS
+          path: RavalTrips-macOS-arm64.dmg
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" RavalTrips-macOS-arm64.dmg --clobber --repo "$GITHUB_REPOSITORY"
