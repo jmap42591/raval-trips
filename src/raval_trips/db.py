@@ -50,3 +50,13 @@ def counts(con):
     n = con.execute("select count(*), min(ts), max(ts) from readings").fetchone()
     d = con.execute("select count(*) from deliveries").fetchone()[0]
     return dict(readings=n[0], first=n[1], last=n[2], deliveries=d)
+
+
+def latest(con):
+    """The most recent known value (and its time) of each field."""
+    out = {}
+    for col in ("soc", "odo", "charge_state", "charge_power", "locked", "outdoor"):
+        row = con.execute(f"select ts, {col} from readings where {col} is not null order by ts desc limit 1").fetchone()
+        out[col] = row[1] if row else None
+        out[col + "_ts"] = row[0] if row else None
+    return out

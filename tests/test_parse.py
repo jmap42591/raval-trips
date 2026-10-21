@@ -43,3 +43,16 @@ class ParseTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LatestTests(unittest.TestCase):
+    def test_latest_values(self):
+        con = db.connect(":memory:")
+        db.add_reading(con, 1.0, soc=80, odo=100)
+        db.add_reading(con, 2.0, soc=79)                  # newer SoC, no odometer in this reading
+        db.add_reading(con, 3.0, charge_state="off")
+        con.commit()
+        L = db.latest(con)
+        self.assertEqual(L["soc"], 79)
+        self.assertEqual(L["odo"], 100)                   # latest known odometer, from an older reading
+        self.assertEqual(L["charge_state"], "off")

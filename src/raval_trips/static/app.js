@@ -38,17 +38,37 @@ function tripCard(t, i, inProgress, isLast) {
   </div>`;
 }
 
+const CHARGE_LABEL = { charging: "Charging", ready_for_charging: "Plugged in", conservation: "Plugged in", off: "Not charging" };
+
+function latestCard() {
+  const L = R.latest || {};
+  if (L.odo == null && L.soc == null) return "";
+  const when = [L.soc_ts, L.odo_ts, L.charge_state_ts].filter(Boolean).sort((a, b) => b - a)[0];
+  return `<h2>Your car right now</h2><div class="grid">${tile("Battery", L.soc == null ? "—" : Math.round(L.soc), "%")}${tile("Odometer", L.odo == null ? "—" : num(L.odo, 0), "km")}${tile("Charging", esc(CHARGE_LABEL[L.charge_state] || "—"))}${tile("Outside", L.outdoor == null ? "—" : num(L.outdoor, 0), "°C")}</div>` +
+    (when ? `<div class="note">Last report from the car: ${date(when)}. It reports roughly every 15 minutes, with some delay.</div>` : "");
+}
+
 function renderCycle() {
   const el = $("#cycle");
   const c = R.current;
-  if (!c) {
+  if (!R.connected && !c) {
     el.innerHTML = onboarding();
     bindConnect(el);
     return;
   }
+  let h = latestCard();
+  if (!c) {
+    const d = R.data, st = R.status;
+    h += `<div class="card"><h2 style="margin-top:0">Connected ✓ Waiting for your first trip</h2>
+      <p>The app has downloaded <b>${d.readings}</b> readings from <b>${d.deliveries}</b> data files${st.last_ok ? ` (last sync ${date(st.last_ok)})` : ""}.</p>
+      <p>A trip appears as soon as the car has been driven, because the odometer has to change. Keep the app open, or open it again later: it syncs every ${R.settings.sync_minutes} minutes and catches up on anything it missed.</p>
+      ${st.last_error ? `<p class="msg err">${esc(st.last_error)}</p>` : ""}</div>`;
+    el.innerHTML = h;
+    return;
+  }
   const s = c.summary;
   const since = c.last_charge ? `${date(c.last_charge.ts)} · ${Math.round(c.last_charge.soc)}%` : "—";
-  let h = `<h2>Since the last charge</h2><div class="note">Last charge finished: <b>${esc(since)}</b>. Trips are split when readings are more than ${R.settings.gap_minutes} min apart, and the cycle closes at the next charge. Cost at ${num(R.settings.price_kwh, 2)} ${esc(cur())}/kWh.</div>`;
+  h += `<h2>Since the last charge</h2><div class="note">Last charge finished: <b>${esc(since)}</b>. Trips are split when readings are more than ${R.settings.gap_minutes} min apart, and the cycle closes at the next charge. Cost at ${num(R.settings.price_kwh, 2)} ${esc(cur())}/kWh.</div>`;
   h += `<div class="grid">${tile("Trips", s.trips)}${tile("Distance", num(s.km), "km")}${tile("Energy", num(s.kwh), "kWh")}${tile("Cost", money(s.cost))}${tile("Average", num(s.kwh_100), "kWh/100 km")}${tile("Driving time", dur(s.duration))}</div>`;
   h += `<h2>Trips</h2>`;
   const n = c.trips.length;

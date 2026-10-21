@@ -95,12 +95,13 @@ def build_report():
     try:
         odo, soc, chg = db.series(con)
         counts = db.counts(con)
+        latest = db.latest(con)
     finally:
         con.close()
     eng = Engine(odo, soc, chg, battery_kwh=s["battery_kwh"], price=s["price_kwh"], gap_minutes=s["gap_minutes"])
     rep = eng.report()
     public = {k: v for k, v in s.items()}
-    rep.update(settings=public, status=STATE.snapshot(), data=counts, version=__version__,
+    rep.update(settings=public, status=STATE.snapshot(), data=counts, latest=latest, version=__version__,
                connected=bool(s["email"] and s["vin"]))
     return rep
 
